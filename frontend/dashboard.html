@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Dashboard - Zilha Parishad Chandrapur</title>
+  <link rel="stylesheet" href="assets/style.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <div class="logo">ZP</div>
+      <div class="titles">
+        <h1 id="main-title">Zilha Parishad — Chandrapur</h1>
+        <p id="subtitle">Data Dashboard</p>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="dashboard.html" class="nav-link active">Dashboard</a>
+      <a href="about.html" class="nav-link">About</a>
+      <a href="contact.html" class="nav-link">Contact</a>
+
+      <div class="lang">
+        <button id="btn-en" class="lang-btn active">EN</button>
+        <button id="btn-hi" class="lang-btn">हिंदी</button>
+        <button id="btn-ma" class="lang-btn">मराठी</button>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="left card">
+      <div class="uploader">
+        <input id="fileExcel" type="file" accept=".xlsx,.csv"/>
+        <button id="uploadBtn">Upload Excel</button>
+        <button id="reloadBtn">Reload Data</button>
+      </div>
+
+      <div id="summary" class="summary">No data loaded</div>
+
+      <div class="analytics card">
+        <h3>Top villages (by total SAM+MAM)</h3>
+        <canvas id="barChart"></canvas>
+      </div>
+
+      <div class="card">
+  <h3>Prediction & Recommendation</h3>
+
+  <p id="predictionText">Loading prediction...</p>
+  <p id="riskLevel"></p>
+  <p id="growthRate"></p>
+
+  <h4>Recommendations:</h4>
+  <ul id="recommendList"></ul>
+</div>
+
+
+      <div id="topList" class="top-list card"></div>
+    </section>
+
+    <aside class="side card">
+      <h3>Chandrapur Map</h3>
+      <div id="map" style="height:360px;border-radius:8px;overflow:hidden"></div>
+      <div style="height:12px"></div>
+      <h3>Chatbot Assistance</h3>
+      <div id="chatWindow" class="chatWindow"><div class="bot-msg">Upload data then ask: "most affected", "top 5", "total", "solutions"</div></div>
+      <div class="chat-input">
+        <input id="chatInput" placeholder="Ask (Marathi/Hindi/English)..." />
+        <button id="askBtn">Ask</button>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="site-footer">© Zilha Parishad Chandrapur</footer>
+
+  <script src="assets/main.js" defer></script>
+</body>
+</html>

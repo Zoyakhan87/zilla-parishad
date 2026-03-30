@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Zilha Parishad — Chandrapur</title>
+  <link rel="stylesheet" href="assets/style.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <div class="logo">ZP</div>
+      <div class="titles">
+        <h1 id="main-title">Zilha Parishad — Chandrapur</h1>
+        <p id="subtitle">Health Driven Data Analysis</p>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a href="index.html" class="nav-link active">Home</a>
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="about.html" class="nav-link">About</a>
+      <a href="contact.html" class="nav-link">Contact</a>
+
+      <div class="lang">
+        <button id="btn-en" class="lang-btn active">EN</button>
+        <button id="btn-hi" class="lang-btn">हिंदी</button>
+        <button id="btn-ma" class="lang-btn">मराठी</button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Hero / Slider -->
+    <section class="hero">
+      <div class="slider" id="slider">
+        <div class="slide"><img src="assets/images/slide1.jpg" alt="slide1"/></div>
+      </div>
+      <div class="hero-content">
+        <h2 id="hero-title">Welcome to Zilha Parishad — Chandrapur</h2>
+        <p id="hero-sub">A government-style dashboard for health-driven data analysis.</p>
+        <div class="hero-cta">
+          <a class="btn" href="dashboard.html">Open Dashboard</a>
+          <a class="btn outline" href="about.html">About</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Short features -->
+    <section class="features">
+      <div class="card feature">
+        <h3>Data-Driven Insights</h3>
+        <p>Visualize SAM & MAM counts village-wise.</p>
+      </div>
+      <div class="card feature">
+        <h3>Interactive Map</h3>
+        <p>Locate top affected villages (placeholder markers).</p>
+      </div>
+      <div class="card feature">
+        <h3>AI Chat Assistant</h3>
+        <p>Ask questions in Marathi / Hindi / English.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Global Chatbot floating widget (included on every page by script) -->
+  <div id="chatbot-floating"></div>
+
+  <footer class="site-footer">© Zilha Parishad Chandrapur</footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+  <script src="assets/main.js" defer></script>
+</body>
+</html>
