@@ -227,7 +227,7 @@ function injectChatbotWidget(){
 
   }
 }
-app.use('/api', require('./routes/data'));
+
 // ===============================
 // Load Prediction
 // ===============================

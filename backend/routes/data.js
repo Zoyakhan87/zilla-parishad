@@ -5,6 +5,7 @@ const path = require('path');
 const XLSX = require('xlsx');
 const fs = require('fs');
 const multer = require('multer');
+fetch("http://localhost:3000/api/prediction");
 
 const EXCEL_DIR = path.join(__dirname, '..', 'excel');
 const EXCEL_PATH = path.join(EXCEL_DIR, 'data.xlsx');
@@ -208,83 +209,114 @@ router.post('/upload-excel', upload.single('excel'), (req,res) => {
 // ===============================
 // Prediction API
 // ===============================
-router.get('/prediction', (req,res)=>{
-  const raw = readRows();
-  const analysis = analyze(raw.rows || []);
-  const agg = analysis ? aggregate(raw.rows, analysis) : [];
+// router.get('/prediction', (req,res)=>{
+//   const raw = readRows();
+//   const analysis = analyze(raw.rows || []);
+//   const agg = analysis ? aggregate(raw.rows, analysis) : [];
 
-  if (agg.length === 0){
-    return res.json({ message: "No data available" });
+//   if (agg.length === 0){
+//     return res.json({ message: "No data available" });
+//   }
+
+//   const stats = calculateStats(agg);
+//   const trend = calculateTrend(agg);
+
+//   let riskLevel = "Low";
+//   if (stats.avg > 50 || trend.growth > 20) riskLevel = "High";
+//   else if (stats.avg > 20 || trend.growth > 10) riskLevel = "Medium";
+
+//   let message = "Stable condition expected";
+
+//   if (trend.growth > 20){
+//     message = "Cases may increase rapidly";
+//   } else if (trend.growth > 5){
+//     message = "Slight increase expected";
+//   } else if (trend.growth < 0){
+//     message = "Cases may decrease";
+//   }
+
+//   res.json({
+//     averageCases: stats.avg,
+//     growthRate: trend.growth,
+//     riskLevel: riskLevel,
+//     prediction: message
+//   });
+// });
+
+// call Python API
+const axios = require("axios");
+
+router.get("/prediction", async (req, res) => {
+  try {
+    const response = await axios.post("http://127.0.0.1:5001/predict", {
+      month: 6
+    });
+
+    res.json(response.data);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: "ML server not responding" });
   }
-
-  const stats = calculateStats(agg);
-  const trend = calculateTrend(agg);
-
-  let riskLevel = "Low";
-  if (stats.avg > 50 || trend.growth > 20) riskLevel = "High";
-  else if (stats.avg > 20 || trend.growth > 10) riskLevel = "Medium";
-
-  let message = "Stable condition expected";
-
-  if (trend.growth > 20){
-    message = "Cases may increase rapidly";
-  } else if (trend.growth > 5){
-    message = "Slight increase expected";
-  } else if (trend.growth < 0){
-    message = "Cases may decrease";
-  }
-
-  res.json({
-    averageCases: stats.avg,
-    growthRate: trend.growth,
-    riskLevel: riskLevel,
-    prediction: message
-  });
 });
   // ===============================
 // Recommendation API
 // ===============================
-router.get('/recommendation', (req, res) => {
-  const raw = readRows();
-  const analysis = analyze(raw.rows || []);
-  const agg = analysis ? aggregate(raw.rows, analysis) : [];
+// router.get('/recommendation', (req, res) => {
+//   const raw = readRows();
+//   const analysis = analyze(raw.rows || []);
+//   const agg = analysis ? aggregate(raw.rows, analysis) : [];
 
-  if (agg.length === 0){
-    return res.json({ message: "No data available for recommendation" });
+//   if (agg.length === 0){
+//     return res.json({ message: "No data available for recommendation" });
+//   }
+
+//   const stats = calculateStats(agg);
+//   const trend = calculateTrend(agg);
+
+//   let riskLevel = "Low";
+//   if (stats.avg > 50 || trend.growth > 20) riskLevel = "High";
+//   else if (stats.avg > 20 || trend.growth > 10) riskLevel = "Medium";
+
+//   let message = "Stable condition expected";
+
+//   if (trend.growth > 20){
+//     message = "Cases may increase rapidly";
+//   } else if (trend.growth > 5){
+//     message = "Slight increase expected";
+//   } else if (trend.growth < 0){
+//     message = "Cases may decrease";
+//   }
+
+//   let recommendation = "Maintain current health programs";
+
+//   if (riskLevel === "High") {
+//     recommendation = "Increase awareness campaigns and medical camps";
+//   } else if (riskLevel === "Medium") {
+//     recommendation = "Monitor closely and educate community";
+//   }
+
+//   res.json({
+//     recommendations: [recommendation],
+//     averageCases: stats.avg,
+//     growthRate: trend.growth,
+//     riskLevel: riskLevel,
+//     prediction: message
+//   });
+// });
+
+router.get("/recommendation", (req, res) => {
+  const cases = 80;
+
+  let recommendations = [];
+
+  if (cases > 50) {
+    recommendations.push("Increase medical camps");
+    recommendations.push("Provide mosquito nets");
+  } else {
+    recommendations.push("Maintain hygiene awareness");
   }
 
-  const stats = calculateStats(agg);
-  const trend = calculateTrend(agg);
-
-  let riskLevel = "Low";
-  if (stats.avg > 50 || trend.growth > 20) riskLevel = "High";
-  else if (stats.avg > 20 || trend.growth > 10) riskLevel = "Medium";
-
-  let message = "Stable condition expected";
-
-  if (trend.growth > 20){
-    message = "Cases may increase rapidly";
-  } else if (trend.growth > 5){
-    message = "Slight increase expected";
-  } else if (trend.growth < 0){
-    message = "Cases may decrease";
-  }
-
-  let recommendation = "Maintain current health programs";
-
-  if (riskLevel === "High") {
-    recommendation = "Increase awareness campaigns and medical camps";
-  } else if (riskLevel === "Medium") {
-    recommendation = "Monitor closely and educate community";
-  }
-
-  res.json({
-    recommendations: [recommendation],
-    averageCases: stats.avg,
-    growthRate: trend.growth,
-    riskLevel: riskLevel,
-    prediction: message
-  });
+  res.json({ recommendations });
 });
 
 module.exports = router;
