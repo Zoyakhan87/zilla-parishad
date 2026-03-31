@@ -206,42 +206,6 @@ router.post('/upload-excel', upload.single('excel'), (req,res) => {
   res.json({ ok:true, message:'uploaded' });
 });
 
-// ===============================
-// Prediction API
-// ===============================
-// router.get('/prediction', (req,res)=>{
-//   const raw = readRows();
-//   const analysis = analyze(raw.rows || []);
-//   const agg = analysis ? aggregate(raw.rows, analysis) : [];
-
-//   if (agg.length === 0){
-//     return res.json({ message: "No data available" });
-//   }
-
-//   const stats = calculateStats(agg);
-//   const trend = calculateTrend(agg);
-
-//   let riskLevel = "Low";
-//   if (stats.avg > 50 || trend.growth > 20) riskLevel = "High";
-//   else if (stats.avg > 20 || trend.growth > 10) riskLevel = "Medium";
-
-//   let message = "Stable condition expected";
-
-//   if (trend.growth > 20){
-//     message = "Cases may increase rapidly";
-//   } else if (trend.growth > 5){
-//     message = "Slight increase expected";
-//   } else if (trend.growth < 0){
-//     message = "Cases may decrease";
-//   }
-
-//   res.json({
-//     averageCases: stats.avg,
-//     growthRate: trend.growth,
-//     riskLevel: riskLevel,
-//     prediction: message
-//   });
-// });
 
 // call Python API
 const axios = require("axios");
@@ -258,51 +222,7 @@ router.get("/prediction", async (req, res) => {
     res.status(500).json({ error: "ML server not responding" });
   }
 });
-  // ===============================
-// Recommendation API
-// ===============================
-// router.get('/recommendation', (req, res) => {
-//   const raw = readRows();
-//   const analysis = analyze(raw.rows || []);
-//   const agg = analysis ? aggregate(raw.rows, analysis) : [];
-
-//   if (agg.length === 0){
-//     return res.json({ message: "No data available for recommendation" });
-//   }
-
-//   const stats = calculateStats(agg);
-//   const trend = calculateTrend(agg);
-
-//   let riskLevel = "Low";
-//   if (stats.avg > 50 || trend.growth > 20) riskLevel = "High";
-//   else if (stats.avg > 20 || trend.growth > 10) riskLevel = "Medium";
-
-//   let message = "Stable condition expected";
-
-//   if (trend.growth > 20){
-//     message = "Cases may increase rapidly";
-//   } else if (trend.growth > 5){
-//     message = "Slight increase expected";
-//   } else if (trend.growth < 0){
-//     message = "Cases may decrease";
-//   }
-
-//   let recommendation = "Maintain current health programs";
-
-//   if (riskLevel === "High") {
-//     recommendation = "Increase awareness campaigns and medical camps";
-//   } else if (riskLevel === "Medium") {
-//     recommendation = "Monitor closely and educate community";
-//   }
-
-//   res.json({
-//     recommendations: [recommendation],
-//     averageCases: stats.avg,
-//     growthRate: trend.growth,
-//     riskLevel: riskLevel,
-//     prediction: message
-//   });
-// });
+  
 
 router.get("/recommendation", (req, res) => {
   const cases = 80;
