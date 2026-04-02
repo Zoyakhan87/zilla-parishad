@@ -5,10 +5,16 @@ const path = require('path');
 const XLSX = require('xlsx');
 const fs = require('fs');
 const multer = require('multer');
-fetch("http://localhost:3000/api/prediction");
+//fetch("http://localhost:3000/api/prediction");
+
 
 const EXCEL_DIR = path.join(__dirname, '..', 'excel');
 const EXCEL_PATH = path.join(EXCEL_DIR, 'data.xlsx');
+
+//const workbook = XLSX.readFile(EXCEL_PATH);
+//const sheet = workbook.Sheets[workbook.SheetNames[0]];
+//onst data = XLSX.utils.sheet_to_json(sheet);
+
 
 // read rows as arrays for flexible detection
 function readRows() {
@@ -208,32 +214,95 @@ router.post('/upload-excel', upload.single('excel'), (req,res) => {
 
 
 // call Python API
+// const axios = require("axios");
+
+// router.get("/prediction", async (req, res) => {
+//   try {
+//     const response = await axios.post("http://127.0.0.1:5001/predict", {
+//       month: 6
+//     });
+
+//     res.json(response.data);
+//   } catch (err) {
+//     console.error(err.message);
+//     res.status(500).json({ error: "ML server not responding" });
+//   }
+// });
+
 const axios = require("axios");
 
 router.get("/prediction", async (req, res) => {
   try {
+    const raw = readRows();
+    const analysis = analyze(raw.rows);
+    const agg = aggregate(raw.rows, analysis);
+
+    if (!agg || agg.length === 0) {
+      return res.json({ error: "No data" });
+    }
+
+    // ✅ send clean data to Python
     const response = await axios.post("http://127.0.0.1:5001/predict", {
-      month: 6
+      data: agg
     });
 
     res.json(response.data);
+
   } catch (err) {
     console.error(err.message);
-    res.status(500).json({ error: "ML server not responding" });
+    res.status(500).json({ error: "Prediction failed" });
   }
 });
   
+//this is for malaria
+
+// router.get("/recommendation", (req, res) => {
+//   const raw = readRows();
+//   const analysis = analyze(raw.rows);
+//   const agg = aggregate(raw.rows, analysis);
+
+//   let recommendations = [];
+
+//   if (agg.length > 0) {
+//     if (agg[0].total > 50) {
+//       recommendations.push("Increase medical camps");
+//       recommendations.push("Provide mosquito nets");
+//       recommendations.push("Improve sanitation");
+//     } else {
+//       recommendations.push("Maintain hygiene awareness");
+//     }
+//   }
+
+//   res.json({ recommendations });
+// });
 
 router.get("/recommendation", (req, res) => {
-  const cases = 80;
+  const raw = readRows();
+  const analysis = analyze(raw.rows);
+  const agg = aggregate(raw.rows, analysis);
 
   let recommendations = [];
 
-  if (cases > 50) {
-    recommendations.push("Increase medical camps");
-    recommendations.push("Provide mosquito nets");
-  } else {
-    recommendations.push("Maintain hygiene awareness");
+  if (agg.length === 0) {
+    return res.json({ recommendations: ["No data available"] });
+  }
+
+  const top = agg[0];
+
+  if (top.sam > 30) {
+    recommendations.push("Provide therapeutic feeding for SAM children");
+    recommendations.push("Increase NRC (Nutrition Rehabilitation Center) support");
+    recommendations.push("Immediate medical attention for severe cases");
+  }
+
+  if (top.mam > 30) {
+    recommendations.push("Provide supplementary nutrition (Take Home Ration)");
+    recommendations.push("Conduct regular growth monitoring");
+  }
+
+  if (top.total > 50) {
+    recommendations.push("Conduct awareness programs for parents");
+    recommendations.push("Improve Anganwadi services and nutrition supply");
   }
 
   res.json({ recommendations });

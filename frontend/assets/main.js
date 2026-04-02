@@ -42,6 +42,9 @@ window.addEventListener('load', ()=> {
   }
   // Inject global chatbot widget into pages
   injectChatbotWidget();
+
+  loadPrediction();
+  loadRecommendation();
 });
 
 // SLIDER
@@ -231,30 +234,68 @@ function injectChatbotWidget(){
 // ===============================
 // Load Prediction
 // ===============================
+
 function loadPrediction(){
   fetch('/api/prediction')
     .then(res => res.json())
     .then(data => {
       console.log("Prediction:", data);
 
-      if (!data || data.message){
-        document.getElementById('predictionText').innerText = "No prediction available";
+      const predictionEl = document.getElementById('predictionText');
+      const riskEl = document.getElementById('riskLevel');
+      const growthEl = document.getElementById('growthRate');
+
+      // ❌ if API fails
+      if (!data || data.error){
+        if (predictionEl) predictionEl.innerText = "No prediction available";
+        if (riskEl) riskEl.innerText = "";
+        if (growthEl) growthEl.innerText = "";
         return;
       }
 
-      document.getElementById('predictionText').innerText =
-        "Prediction: " + (data.prediction || "N/A");
+      // ✅ Prediction (fix 0 issue)
+      
+      if (predictionEl){
+  const value = data.prediction;
 
-      document.getElementById('riskLevel').innerText =
-        "Risk Level: " + (data.riskLevel || "N/A");
+  if (value === undefined || value === null){
+    predictionEl.innerText = "No prediction available";
+  } else {
+    let level = "";
+    if (value < 20) level = "Low";
+    else if (value < 50) level = "Moderate";
+    else level = "High";
 
-      document.getElementById('growthRate').innerText =
-        "Growth Rate: " + (data.growthRate || 0) + "%";
+    predictionEl.innerText =
+      `${level} risk: Around ${value} SAM/MAM cases expected next month`;
+  }
+}
+
+
+      // ✅ Risk Level
+      if (riskEl){
+        riskEl.innerText =
+          "Risk Level: " + (data.riskLevel ?? "N/A");
+      }
+
+      // ✅ Growth Rate (user-friendly)
+      if (growthEl){
+        let growthText = "";
+
+        if (data.growthRate < 0) {
+          growthText = `Growth rate-📉 Decrease: ${Math.abs(data.growthRate)}%`;
+        } else {
+          growthText = `Growth rate-📈 Increase: ${data.growthRate}%`;
+        }
+
+        growthEl.innerText = growthText;
+      }
     })
     .catch(err => {
       console.error(err);
     });
 }
+
 // ===============================
 // Load Recommendation
 // ===============================
@@ -281,6 +322,14 @@ function loadRecommendation(){
     .catch(err => console.error(err));
 }
 document.addEventListener("DOMContentLoaded", ()=>{
-  loadPrediction();
-  loadRecommendation();
+
+  // ✅ Only run if dashboard elements exist
+  if (document.getElementById('predictionText')) {
+    loadPrediction();
+  }
+
+  if (document.getElementById('recommendList')) {
+    loadRecommendation();
+  }
+
 });

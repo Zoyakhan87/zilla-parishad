@@ -1,5 +1,4 @@
 
-
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
@@ -17,6 +16,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'frontend')));
 
 // ✅ API routes
+
 app.use('/api', dataRoutes);
 
 // ✅ fallback route (optional but good)
