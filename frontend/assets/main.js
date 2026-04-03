@@ -333,3 +333,93 @@ document.addEventListener("DOMContentLoaded", ()=>{
   }
 
 });
+
+// ===============================
+// TOGGLE FUNCTIONS
+// ===============================
+
+function showMalaria(){
+  document.getElementById('samSection').style.display = "none";
+  document.getElementById('malariaSection').style.display = "block";
+
+  loadMalariaPrediction();
+  loadMalariaRecommendation();
+}
+
+function showSAM(){
+  document.getElementById('samSection').style.display = "block";
+  document.getElementById('malariaSection').style.display = "none";
+}
+
+// ===============================
+// MALARIA PREDICTION
+// ===============================
+function loadMalariaPrediction(){
+  fetch('/api/malaria/prediction')
+    .then(res => res.json())
+    .then(data => {
+
+      if (!data || data.error){
+        document.getElementById('malariaPrediction').innerText = "No data available";
+        return;
+      }
+
+      const value = data.prediction;
+
+      document.getElementById('malariaPrediction').innerText =
+        `Estimated ${value} malaria cases next month`;
+
+      document.getElementById('malariaRisk').innerText =
+        `Risk Level: ${data.riskLevel}`;
+
+      let growthText = data.growthRate < 0
+        ? `📉 Decrease: ${Math.abs(data.growthRate)}%`
+        : `📈 Increase: ${data.growthRate}%`;
+
+      document.getElementById('malariaGrowth').innerText = growthText;
+    })
+    .catch(() => {
+      document.getElementById('malariaPrediction').innerText = "Error loading data";
+    });
+}
+
+
+// ===============================
+// MALARIA RECOMMENDATION
+// ===============================
+function loadMalariaRecommendation(){
+  fetch('/api/malaria/recommendation')
+    .then(res => res.json())
+    .then(data => {
+
+      const list = document.getElementById('malariaList');
+      list.innerHTML = "";
+
+      if (!data || !data.recommendations){
+        list.innerHTML = "<li>No recommendations</li>";
+        return;
+      }
+
+      data.recommendations.forEach(item => {
+        const li = document.createElement('li');
+        li.innerText = item;
+        list.appendChild(li);
+      });
+    })
+    .catch(() => {
+      document.getElementById('malariaList').innerHTML = "<li>Error loading data</li>";
+    });
+}
+
+
+// ===============================
+// PAGE LOAD (SAM/MAM DEFAULT)
+// ===============================
+document.addEventListener("DOMContentLoaded", ()=>{
+
+  if (document.getElementById('predictionText')){
+    loadPrediction();
+    loadRecommendation();
+  }
+
+});
