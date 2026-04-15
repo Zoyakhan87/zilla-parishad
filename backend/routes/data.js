@@ -11,7 +11,7 @@ const multer = require('multer');
 const EXCEL_DIR = path.join(__dirname, '..', 'excel');
 const EXCEL_PATH = path.join(EXCEL_DIR, 'data.xlsx');
 
-//const workbook = XLSX.readFile(EXCEL_PATH);
+const workbook = XLSX.readFile(EXCEL_PATH);
 //const sheet = workbook.Sheets[workbook.SheetNames[0]];
 //onst data = XLSX.utils.sheet_to_json(sheet);
 
@@ -84,7 +84,7 @@ function analyze(rows) {
     villageCol,
     samCols: Array.from(samCols).sort((a,b)=>a-b),
     mamCols: Array.from(mamCols).sort((a,b)=>a-b),
-    dataStartIndex: 4
+    dataStartIndex: 6
   };
 }
 
@@ -127,19 +127,32 @@ function aggregate(rows, analysis) {
   if (!analysis) return [];
   const { villageCol, samCols, mamCols, dataStartIndex } = analysis;
   const map = {};
+
+   console.log("SAM COLS:", samCols);
+  console.log("MAM COLS:", mamCols);
+  console.log("Village COL:", villageCol);
+
   for (let r = dataStartIndex; r < rows.length; r++) {
     const row = rows[r];
     if (!row) continue;
+
+    if (r < dataStartIndex + 5) {
+      console.log("ROW SAMPLE:", row);
+    }
+
     const rawV = (row[villageCol] || '').toString().trim();
     if (!rawV) continue;
     const v = rawV;
     let sam = 0, mam = 0;
     samCols.forEach(c => { const val = row[c]; if (val !== '' && !isNaN(Number(val))) sam += Number(val); });
     mamCols.forEach(c => { const val = row[c]; if (val !== '' && !isNaN(Number(val))) mam += Number(val); });
-    if (!map[v]) map[v] = { village: v, sam: 0, mam: 0, total: 0 };
-    map[v].sam += sam; map[v].mam += mam; map[v].total += (sam + mam);
+
+    if (sam === 0 && mam === 0) continue;
+
+    if (!map[rawV]) map[rawV] = { village: rawV, sam: 0, mam: 0, total: 0 };
+    map[rawV].sam += sam; map[rawV].mam += mam; map[rawV].total += (sam + mam);
   }
-  return Object.values(map).sort((a,b)=> b.total - a.total);
+  return Object.values(map).filter(v => v.total >0 ).sort((a,b)=> b.total - a.total);
 }
 
 // Summary endpoint
@@ -212,23 +225,7 @@ router.post('/upload-excel', upload.single('excel'), (req,res) => {
   res.json({ ok:true, message:'uploaded' });
 });
 
-
-// call Python API
-// const axios = require("axios");
-
-// router.get("/prediction", async (req, res) => {
-//   try {
-//     const response = await axios.post("http://127.0.0.1:5001/predict", {
-//       month: 6
-//     });
-
-//     res.json(response.data);
-//   } catch (err) {
-//     console.error(err.message);
-//     res.status(500).json({ error: "ML server not responding" });
-//   }
-// });
-
+  
 const axios = require("axios");
 
 router.get("/prediction", async (req, res) => {
@@ -237,23 +234,41 @@ router.get("/prediction", async (req, res) => {
     const analysis = analyze(raw.rows);
     const agg = aggregate(raw.rows, analysis);
 
+     console.log("AGG:", agg);
+
     if (!agg || agg.length === 0) {
       return res.json({ error: "No data" });
     }
 
-    // ✅ send clean data to Python
+    // ✅ STEP 1: Convert data into required format
+    
+    const cleanData = agg
+  .filter(row => row.sam != null && row.mam != null)
+  .map(row => ({
+    sam: Number(row.sam),
+    mam: Number(row.mam)
+  }));
+
+console.log("Clean Data:", cleanData);
+
+if (cleanData.length === 0) {
+      return res.json({ error: "No valid SAM/MAM data" });
+    }
+
+    // ✅ STEP 2: Send to Python API
     const response = await axios.post("http://127.0.0.1:5001/predict", {
-      data: agg
+      data: cleanData
     });
 
+    // ✅ STEP 3: Send result to frontend
     res.json(response.data);
 
   } catch (err) {
-    console.error(err.message);
+    console.error("Prediction Error:", err.response?.data || err.message);
     res.status(500).json({ error: "Prediction failed" });
   }
 });
-  
+
 //this is for malaria
 
 // router.get("/recommendation", (req, res) => {

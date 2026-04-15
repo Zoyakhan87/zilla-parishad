@@ -232,7 +232,7 @@ function injectChatbotWidget(){
 }
 
 // ===============================
-// Load Prediction
+// Load sam mam Prediction
 // ===============================
 
 function loadPrediction(){
@@ -297,7 +297,7 @@ function loadPrediction(){
 }
 
 // ===============================
-// Load Recommendation
+// Load sam mam Recommendation
 // ===============================
 function loadRecommendation(){
   fetch('/api/recommendation')
@@ -338,17 +338,20 @@ document.addEventListener("DOMContentLoaded", ()=>{
 // TOGGLE FUNCTIONS
 // ===============================
 
+function showSAM(){
+  
+  document.getElementById('samSection').style.display = "block";
+  document.getElementById('malariaSection').style.display = "none";
+
+}
+
 function showMalaria(){
+  
   document.getElementById('samSection').style.display = "none";
   document.getElementById('malariaSection').style.display = "block";
 
   loadMalariaPrediction();
   loadMalariaRecommendation();
-}
-
-function showSAM(){
-  document.getElementById('samSection').style.display = "block";
-  document.getElementById('malariaSection').style.display = "none";
 }
 
 // ===============================
@@ -415,11 +418,11 @@ function loadMalariaRecommendation(){
 // ===============================
 // PAGE LOAD (SAM/MAM DEFAULT)
 // ===============================
-document.addEventListener("DOMContentLoaded", ()=>{
+// document.addEventListener("DOMContentLoaded", ()=>{
 
-  if (document.getElementById('predictionText')){
-    loadPrediction();
-    loadRecommendation();
-  }
+//   if (document.getElementById('predictionText')){
+//     loadPrediction();
+//     loadRecommendation();
+//   }
 
-});
+// });

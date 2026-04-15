@@ -1,15 +1,18 @@
 from flask import Flask, request, jsonify
 import pandas as pd
 from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import PolynomialFeatures
-from sklearn.pipeline import make_pipeline
 
 app = Flask(__name__)
 
-@app.route("/predict", methods=["POST"])
+@app.route('/', methods=["GET"])
+def home():
+    return "Flask API is running ✅"
+
+@app.route('/predict', methods=["POST"])
 def predict():
+    
     try:
-        req = request.json
+        req = request.get_json(force=True)
 
         if not req or "data" not in req:
             return jsonify({"error": "No data provided"}), 400
@@ -19,48 +22,27 @@ def predict():
         if df.empty:
             return jsonify({"error": "Empty dataset"}), 400
 
-        # ensure required columns
-        if "total" not in df.columns:
-            df["total"] = df["sam"] + df["mam"]
+        # ✅ Ensure columns
+        if "sam" not in df.columns or "mam" not in df.columns:
+            return jsonify({"error": "Missing sam/mam"}), 400
 
-        # create time index
-        df = df.reset_index(drop=True)
-        df["month"] = df.index + 1
+        df["total"] = df["sam"] + df["mam"]
 
-        X = df[["month"]]
-        y = df["total"]
+        prediction = df["total"].mean()
 
-        # ✅ Improved model (handles curves better)
-        model = make_pipeline(
-            PolynomialFeatures(degree=2),
-            LinearRegression()
-        )
-        model.fit(X, y)
+# last value (for growth comparison)
+        prev = df["total"].iloc[-1]
 
-        # ✅ predict next month
-        next_month = [[len(df) + 1]]
-        prediction = model.predict(next_month)[0]
-
-        # ✅ prevent negative prediction
-        prediction = max(10, prediction)  # minimum threshold
-
-        # previous month prediction
-        prev = model.predict([[len(df)]])[0]
-        prev = max(1, prev)  # avoid divide by zero
-
-        # ✅ growth calculation (controlled)
         if prev <= 0:
-         growth = 0
+            growth = 0
         else:
-         growth = ((prediction - prev) / prev) * 100
+            growth = ((prediction - prev) / prev) * 100
 
-        # clamp values
-         growth = max(min(growth, 100), -50)
+# limit growth
+        growth = max(min(growth, 100), -100)
 
-        # limit extreme values
-         growth = max(min(growth, 100), -100)
-
-        # ✅ better risk logic
+        
+        # ✅ Risk logic
         if prediction > 70:
             risk = "High"
         elif prediction > 30:
@@ -80,7 +62,6 @@ def predict():
 
 if __name__ == "__main__":
     app.run(port=5001, debug=True)
-
 
 
 
