@@ -7,7 +7,7 @@ const app = express(); // ✅ create app FIRST
 
 // ✅ import routes (correct path)
 const dataRoutes = require('./backend/routes/data');
-
+  
 // middlewares
 app.use(cors());
 app.use(express.json());

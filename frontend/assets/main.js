@@ -175,12 +175,27 @@ async function askChat(q){
   // show in proper chat window if present
   const win = document.getElementById('chatWindow') || document.getElementById('globalChatWindow');
   if (win) win.innerHTML += `<div class="user-msg">${escapeHtml(text)}</div>`;
-  if (document.getElementById('chatInput')) document.getElementById('chatInput').value = '';
+
+  if (document.getElementById('chatInput')) {
+  document.getElementById('chatInput').value = '';
+}
+
+if (document.getElementById('globalChatInput')) {
+  document.getElementById('globalChatInput').value = '';
+}
+
   try {
     const res = await fetch(API + '/chat', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ q: text }) });
     const j = await res.json();
+
     if (win) win.innerHTML += `<div class="bot-msg">${escapeHtml(j.reply).replace(/\n/g,'<br>')}</div>`;
-    if (win) win.scrollTop = win.scrollHeight;
+
+// 🔊 ADD THIS LINE
+speak(j.reply);
+
+if (win) win.scrollTop = win.scrollHeight;
+
+
   } catch (err) {
     console.error(err);
     if (win) win.innerHTML += `<div class="bot-msg">Server error</div>`;
@@ -206,8 +221,12 @@ function injectChatbotWidget(){
         <div class="card" style="padding:10px;background:rgba(0,0,0,0.5);border-radius:10px">
           <div id="globalChatWindow" style="height:260px;overflow:auto;border-radius:8px;padding:6px;background:rgba(255,255,255,0.02);color:#e6eef6">Hi! Ask: "most affected", "top 5", "total", "solutions"</div>
           <div style="display:flex;gap:8px;margin-top:8px">
-            <input id="globalChatInput" placeholder="Type your question..." style="flex:1;padding:8px;border-radius:8px;border:none;background:rgba(255,255,255,0.02);color:#fff"/>
-            <button id="globalAskBtn" style="padding:8px;border-radius:8px;border:none;background:linear-gradient(90deg,#06b6d4,#8b5cf6);color:#021428">Ask</button>
+            
+          <input id="globalChatInput" placeholder="Type your question..." style="flex:1;padding:8px;border-radius:8px;border:none;background:rgba(255,255,255,0.02);color:#fff"/> 
+
+          <button id="globalAskBtn" style="padding:8px;border-radius:8px;border:none;background:linear-gradient(90deg,#06b6d4,#8b5cf6);color:#021428">Ask</button>
+
+          <button id="micBtn" style="padding:8px;border-radius:8px;border:none;background:#06b6d4;color:#021428">🎤</button>
           </div>
         </div>
       </div>
@@ -217,16 +236,10 @@ function injectChatbotWidget(){
       const g = document.getElementById('globalChat');
       g.style.display = g.style.display === 'none' ? 'block' : 'none';
     });
-    document.getElementById('globalAskBtn').addEventListener('click', ()=> {
-      const v = document.getElementById('globalChatInput').value.trim(); if(!v) return;
-      const win = document.getElementById('globalChatWindow');
-      win.innerHTML += `<div class="user-msg">${escapeHtml(v)}</div>`;
-      document.getElementById('globalChatInput').value = '';
-      // call chat API
-      fetch(API + '/chat', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ q: v }) })
-        .then(r => r.json()).then(j => { win.innerHTML += `<div class="bot-msg">${escapeHtml(j.reply).replace(/\n/g,'<br>')}</div>`; win.scrollTop = win.scrollHeight; })
-        .catch(()=> win.innerHTML += `<div class="bot-msg">Server error</div>`);
-    });
+  
+    document.getElementById('globalAskBtn').addEventListener('click', ()=>{
+  askChat();
+});
 
   }
 }
@@ -321,18 +334,6 @@ function loadRecommendation(){
     })
     .catch(err => console.error(err));
 }
-document.addEventListener("DOMContentLoaded", ()=>{
-
-  // ✅ Only run if dashboard elements exist
-  if (document.getElementById('predictionText')) {
-    loadPrediction();
-  }
-
-  if (document.getElementById('recommendList')) {
-    loadRecommendation();
-  }
-
-});
 
 // ===============================
 // TOGGLE FUNCTIONS
@@ -418,11 +419,87 @@ function loadMalariaRecommendation(){
 // ===============================
 // PAGE LOAD (SAM/MAM DEFAULT)
 // ===============================
-// document.addEventListener("DOMContentLoaded", ()=>{
+document.addEventListener("DOMContentLoaded", ()=>{
 
-//   if (document.getElementById('predictionText')){
-//     loadPrediction();
-//     loadRecommendation();
-//   }
+  if (document.getElementById('predictionText')){
+    loadPrediction();
+    loadRecommendation();
+  }
 
-// });
+});
+
+// ===============================
+// 🎤 VOICE INPUT
+// ===============================
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+if (SpeechRecognition) {
+  const recognition = new SpeechRecognition();
+  recognition.lang = "en-IN";
+  recognition.continuous = true;
+
+  let isListening = false;
+
+
+      document.addEventListener("click", (e) => {
+    if (e.target && e.target.id === "micBtn") {
+
+      if (!isListening) {
+        recognition.start();
+        e.target.innerText = "🛑 Stop";
+        isListening = true;
+      } else {
+        recognition.stop();
+        e.target.innerText = "🎤";
+        isListening = false;
+      }
+
+    }
+  });
+
+
+  // recognition.onresult = function(event) {
+  //   const text = event.results[0][0].transcript;
+
+  //   // ✅ Put text into chatbot input
+  //   document.getElementById("globalChatInput").value = text;
+
+  //   document.getElementById("micBtn").innerText = "🎤";
+
+  //   // ✅ Send automatically
+  //   askChat(text);
+      
+  recognition.onresult = function(event) {
+  const text = event.results[event.results.length - 1][0].transcript;
+
+  console.log("voice", text);
+
+  // ✅ directly send without typing
+  askChat(text);
+};
+
+recognition.onend = function() {
+  
+  if (isListening) recognition.start(); // continuous listening
+  
+};
+
+  };
+
+  recognition.onerror = function() {
+    const btn = document.getElementById("micBtn");
+    if (btn) btn.innerText = "🎤";
+  };
+
+
+// ===============================
+// 🔊 TEXT TO SPEECH
+// ===============================
+
+function speak(text) {
+  const speech = new SpeechSynthesisUtterance(text);
+  speech.lang = "en-IN";
+  speech.rate = 1;
+  window.speechSynthesis.speak(speech);
+}
