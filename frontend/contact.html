@@ -14,17 +14,77 @@
   </nav>
 </header>
 
-<main class="content card">
-  <h2>Contact Us</h2>
-  <form id="contactForm">
-    <label>Name</label><input id="cname" required/>
-    <label>Email</label><input id="cemail" type="email" required/>
-    <label>Message</label><textarea id="cmsg" required></textarea>
-    <button type="submit" class="btn">Send Message</button>
-  </form>
-  <p style="margin-top:12px">Address: Zilha Parishad Office, Chandrapur, Maharashtra</p>
-</main>
+<main class="container">
 
+  <!-- LEFT SIDE -->
+  <section>
+
+    <!-- Address -->
+    <div class="card">
+      <h3>📍 Office Address</h3>
+      <p>
+        Zilha Parishad Chandrapur,<br>
+        Civil Lines, Chandrapur,<br>
+        Maharashtra - 442401
+      </p>
+    </div>
+
+    <!-- Contact Info -->
+    <div class="card">
+      <h3>📞 Contact Information</h3>
+      <p>Phone: 07172-XXXXXX</p>
+      <p>Email: zpchandrapur@gov.in</p>
+      <p>Health Helpline: 104</p>
+      <p>Child Helpline: 1098</p>
+    </div>
+
+    <!-- Officials -->
+    <div class="card">
+      <h3>👤 Key Officials</h3>
+      <p><b>District Health Officer</b></p>
+      <p>Contact: 9876543210</p>
+
+      <p><b>Child Welfare Officer</b></p>
+      <p>Contact: 9123456780</p>
+    </div>
+
+    <!-- Working Hours -->
+    <div class="card">
+      <h3>🕒 Working Hours</h3>
+      <p>Mon – Fri: 10 AM – 5 PM</p>
+      <p>Saturday: 10 AM – 2 PM</p>
+      <p>Sunday: Closed</p>
+    </div>
+
+  </section>
+
+  <!-- RIGHT SIDE -->
+  <aside>
+
+    <!-- Contact Form -->
+    <div class="card">
+      <h3>📨 Send Message</h3>
+
+      <form id="contactForm">
+        <label>Name</label>
+        <input id="cname" required/>
+
+        <label>Email</label>
+        <input id="cemail" type="email" required/>
+
+        <label>Mobile</label>
+        <input required/>
+
+        <label>Message</label>
+        <textarea id="cmsg" required></textarea>
+
+        <button type="submit" class="btn">Send Message</button>
+      </form>
+    </div>
+
+  </aside>
+
+</main>
 <footer class="site-footer">© Zilha Parishad Chandrapur</footer>
 <script src="assets/main.js" defer></script>
 </body>

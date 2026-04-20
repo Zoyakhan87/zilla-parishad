@@ -1,7 +1,9 @@
 // assets/main.js
 const API = '/api';
 let barChart = null, map = null, markersLayer = null, sliderIndex = 0;
-const sliderDelay = 4000;
+const sliderDelay = 3000;
+       
+   
 
 // language strings (basic)
 const I18N = {
@@ -49,17 +51,33 @@ window.addEventListener('load', ()=> {
   loadRecommendation();
 });
 
-// SLIDER
+//slider
+
 function initSlider(){
+
   const slides = document.querySelectorAll('.slide');
-  if (!slides || slides.length === 0) return;
-  setInterval(()=> {
-    slides.forEach((s,i)=> s.style.transform = `translateX(${(i - sliderIndex) * 100}%)`);
+
+  if (!slides.length){
+    console.log("No slides found");
+    return;
+  }
+
+  // initial position
+  slides.forEach((slide, i) => {
+    slide.style.transform = `translateX(${i * 100}%)`;
+  });
+
+  setInterval(() => {
+
     sliderIndex = (sliderIndex + 1) % slides.length;
+
+    slides.forEach((slide, i) => {
+      slide.style.transform = `translateX(${(i - sliderIndex) * 100}%)`;
+    });
+
   }, sliderDelay);
-  // initial layout
-  document.querySelectorAll('.slide').forEach((s,i)=> s.style.transform = `translateX(${i*100}%)`);
 }
+
 
 // Language buttons
 function bindLangButtons(){
@@ -711,3 +729,4 @@ function loadAIInsights(){
     })
     .catch(err => console.error(err));
 }
+

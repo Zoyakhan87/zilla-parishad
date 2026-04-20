@@ -256,7 +256,8 @@ if (cleanData.length === 0) {
     }
 
     // ✅ STEP 2: Send to Python API
-    const response = await axios.post("http://127.0.0.1:5001/predict", {
+    const response = await axios.post("http://127.0.0.1:5001/predict",
+       {
       data: cleanData
     });
 
