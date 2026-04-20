@@ -39,6 +39,8 @@ window.addEventListener('load', ()=> {
     initChart();
     bindDashboardUI();
     loadSummary();
+    loadAlerts();
+    loadAIInsights();
   }
   // Inject global chatbot widget into pages
   injectChatbotWidget();
@@ -204,9 +206,22 @@ if (win) win.scrollTop = win.scrollHeight;
 
 function escapeHtml(text){ return String(text).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
 
-// GLOBAL CHATBOT WIDGET (inject into every page)
+
+function speak(text){
+  if (!text) return;
+
+  const speech = new SpeechSynthesisUtterance(text);
+  speech.lang = "en-IN";   // you can change to hi-IN / mr-IN
+  speech.rate = 1;
+
+  window.speechSynthesis.cancel(); // stop previous speech
+  window.speechSynthesis.speak(speech);
+}
+
+
 function injectChatbotWidget(){
   const c = document.getElementById('chatbot-floating');
+
   if (!c) {
     // create floating div
     const wrapper = document.createElement('div');
@@ -215,34 +230,91 @@ function injectChatbotWidget(){
     wrapper.style.right='18px';
     wrapper.style.bottom='18px';
     wrapper.style.zIndex='9999';
+
     wrapper.innerHTML = `
-      <button id="openChatBtn" title="Chat Assistant" style="background:linear-gradient(90deg,#06b6d4,#8b5cf6);border:none;padding:12px;border-radius:50%;cursor:pointer;font-weight:800">💬</button>
+      <button id="openChatBtn" title="Chat Assistant" 
+        style="background:linear-gradient(90deg,#06b6d4,#8b5cf6);border:none;padding:12px;border-radius:50%;cursor:pointer;font-weight:800">
+        💬
+      </button>
+
       <div id="globalChat" style="display:none;width:340px;margin-top:10px">
         <div class="card" style="padding:10px;background:rgba(0,0,0,0.5);border-radius:10px">
-          <div id="globalChatWindow" style="height:260px;overflow:auto;border-radius:8px;padding:6px;background:rgba(255,255,255,0.02);color:#e6eef6">Hi! Ask: "most affected", "top 5", "total", "solutions"</div>
-          <div style="display:flex;gap:8px;margin-top:8px">
-            
-          <input id="globalChatInput" placeholder="Type your question..." style="flex:1;padding:8px;border-radius:8px;border:none;background:rgba(255,255,255,0.02);color:#fff"/> 
 
-          <button id="globalAskBtn" style="padding:8px;border-radius:8px;border:none;background:linear-gradient(90deg,#06b6d4,#8b5cf6);color:#021428">Ask</button>
-
-          <button id="micBtn" style="padding:8px;border-radius:8px;border:none;background:#06b6d4;color:#021428">🎤</button>
+          <div id="globalChatWindow" 
+            style="height:260px;overflow:auto;border-radius:8px;padding:6px;background:rgba(255,255,255,0.02);color:#e6eef6">
+            Hi! Ask: "most affected", "top 5", "total", "solutions"
           </div>
+
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <input id="globalChatInput" placeholder="Type your question..." 
+              style="flex:1;padding:8px;border-radius:8px;border:none;background:rgba(255,255,255,0.02);color:#fff"/>
+
+            <button id="globalAskBtn" 
+              style="padding:8px;border-radius:8px;border:none;background:linear-gradient(90deg,#06b6d4,#8b5cf6);color:#021428">
+              Ask
+            </button>
+
+            <button id="micBtn" 
+              style="padding:8px;border-radius:8px;border:none;background:#06b6d4;color:#021428">
+              🎤
+            </button>
+          </div>
+
         </div>
       </div>
     `;
+
     document.body.appendChild(wrapper);
-    document.getElementById('openChatBtn').addEventListener('click', ()=> {
+
+    // ✅ Toggle chat
+    document.getElementById('openChatBtn').addEventListener('click', ()=>{
       const g = document.getElementById('globalChat');
       g.style.display = g.style.display === 'none' ? 'block' : 'none';
     });
-  
+
+    // ✅ Ask button
     document.getElementById('globalAskBtn').addEventListener('click', ()=>{
-  askChat();
-});
+      askChat();
+    });
+
+    // 🎤 VOICE (MOVED INSIDE)
+    const micBtn = document.getElementById('micBtn');
+
+    micBtn.addEventListener('click', ()=>{
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+      if (!SpeechRecognition){
+        alert("Use Chrome for voice feature");
+        return;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = "en-IN";
+      recognition.start();
+
+      micBtn.innerText = "🎙️ Listening...";
+
+      recognition.onresult = function(event){
+        const text = event.results[0][0].transcript;
+
+        document.getElementById("globalChatInput").value = text;
+
+        askChat(text);
+
+        micBtn.innerText = "🎤";
+      };
+
+      recognition.onerror = function(){
+        micBtn.innerText = "🎤";
+      };
+
+    });
 
   }
 }
+
+
 
 // ===============================
 // Load sam mam Prediction
@@ -287,8 +359,24 @@ function loadPrediction(){
 
       // ✅ Risk Level
       if (riskEl){
-        riskEl.innerText =
-          "Risk Level: " + (data.riskLevel ?? "N/A");
+       
+        const risk = data.riskLevel ?? "N/A";
+
+  riskEl.innerText = "Risk Level: " + risk;
+
+  if (risk === "High"){
+    riskEl.style.color = "red";
+  }
+  else if (risk === "Medium"){
+    riskEl.style.color = "orange";
+  }
+  else if (risk === "Low"){
+    riskEl.style.color = "green";
+  }
+  else{
+    riskEl.style.color = "white";
+  }
+
       }
 
       // ✅ Growth Rate (user-friendly)
@@ -303,6 +391,48 @@ function loadPrediction(){
 
         growthEl.innerText = growthText;
       }
+
+      // ===============================
+// AI INSIGHTS COUNTS (ADD HERE)
+// ===============================
+
+const highEl = document.getElementById("highRiskCount");
+const medEl = document.getElementById("mediumRiskCount");
+const lowEl = document.getElementById("lowRiskCount");
+
+if (highEl) highEl.innerText = data.highRisk ?? "-";
+
+if (medEl){
+  if (data.mediumRisk > 0){
+    medEl.innerText = data.mediumRisk;
+  } else {
+    medEl.innerText = "-"; // cleaner UI
+  }
+}
+
+if (lowEl){
+  if (data.lowRisk > 0){
+    lowEl.innerText = data.lowRisk;
+  } else {
+    lowEl.innerText = "-";
+  }
+}
+
+// ===============================
+// AI SUMMARY (ADD HERE)
+// ===============================
+
+const summary = document.getElementById("riskSummary");
+
+if (summary){
+  if (data.highRisk > data.mediumRisk){
+    summary.innerText = "⚠️ High risk villages dominate. Immediate intervention required.";
+  }
+  else{
+    summary.innerText = "✅ Situation under control with balanced risk distribution.";
+  }
+}
+
     })
     .catch(err => {
       console.error(err);
@@ -457,18 +587,6 @@ if (SpeechRecognition) {
 
     }
   });
-
-
-  // recognition.onresult = function(event) {
-  //   const text = event.results[0][0].transcript;
-
-  //   // ✅ Put text into chatbot input
-  //   document.getElementById("globalChatInput").value = text;
-
-  //   document.getElementById("micBtn").innerText = "🎤";
-
-  //   // ✅ Send automatically
-  //   askChat(text);
       
   recognition.onresult = function(event) {
   const text = event.results[event.results.length - 1][0].transcript;
@@ -502,4 +620,94 @@ function speak(text) {
   speech.lang = "en-IN";
   speech.rate = 1;
   window.speechSynthesis.speak(speech);
+}
+
+// ===============================
+// ALERT SYSTEM
+// ===============================
+function loadAlerts(){
+  fetch('/api/agg')
+    .then(res => res.json())
+    .then(data => {
+
+      const alertBox = document.getElementById('alertBox');
+      if (!alertBox) return;
+
+      if (!data.agg || data.agg.length === 0){
+        alertBox.innerHTML = "No data available";
+        return;
+      }
+
+      let html = "";
+
+      data.agg.slice(0,5).forEach(v => {
+
+        let color = "green";
+        let level = "Low";
+
+        if (v.total > 70){
+          color = "red";
+          level = "High";
+        } else if (v.total > 30){
+          color = "orange";
+          level = "Medium";
+        }
+
+        html += `
+          <div style="margin:8px 0; padding:8px; border-left:5px solid ${color}; background:rgba(255,255,255,0.05)">
+            <b>${v.village}</b><br>
+            Total: ${v.total} | Risk: <span style="color:${color}">${level}</span>
+          </div>
+        `;
+      });
+
+      alertBox.innerHTML = html;
+    })
+    .catch(err => console.error(err));
+}
+
+function loadAIInsights(){
+  fetch(API + '/agg')
+    .then(res => res.json())
+    .then(data => {
+
+      const agg = data.agg || [];
+
+      if (agg.length === 0){
+        document.getElementById('aiVillage').innerText = "No data available";
+        return;
+      }
+
+      const top = agg[0];
+
+      // Most affected village
+      document.getElementById('aiVillage').innerText =
+        `📍 Most Affected: ${top.village}`;
+
+      // Total
+      const total = agg.reduce((s,x)=> s + x.total, 0);
+      document.getElementById('aiTotal').innerText =
+        `📊 Total Cases: ${total}`;
+
+      // Trend (simple logic)
+      let trend = "Stable";
+      if (top.total > 50) trend = "📈 Increasing";
+      else trend = "📉 Decreasing";
+
+      document.getElementById('aiTrend').innerText =
+        `Trend: ${trend}`;
+
+      // Suggestion
+      let suggestion = "";
+
+      if (top.total > 50){
+        suggestion = "Increase medical camps and nutrition supply";
+      } else {
+        suggestion = "Maintain monitoring and awareness";
+      }
+
+      document.getElementById('aiSuggestion').innerText =
+        `💡 ${suggestion}`;
+    })
+    .catch(err => console.error(err));
 }

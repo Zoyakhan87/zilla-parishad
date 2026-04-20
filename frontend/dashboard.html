@@ -68,6 +68,12 @@
   </div>
 
   <div id="topList" class="top-list card"></div>
+
+  <div class="card" style="margin-top:20px">
+  <h3>🚨 High Risk Villages Alert</h3>
+  <div id="alertBox">Loading...</div>
+</div>
+
 </div>
 
 <!-- MALARIA -->
@@ -101,6 +107,56 @@
         <input id="chatInput" placeholder="Ask (Marathi/Hindi/English)..." />
         <button id="askBtn">Ask</button>
       </div>
+
+       <div class="card ai-insight">
+
+  <div class="ai-header">
+  <div>
+    <h3>AI Insights</h3>
+    <small>Government Health Monitoring System</small>
+  </div>
+  <span class="status">● LIVE</span>
+</div>
+
+  <div class="ai-main">
+    <h1 id="highRiskCount">0</h1>
+    <p>High Risk Villages</p>
+  </div>
+
+  <div class="ai-stats">
+    <div class="stat">
+      <span>🟠 Medium</span>
+      <b id="mediumRiskCount">0</b>
+    </div>
+    <div class="stat">
+      <span>🟢 Low</span>
+      <b id="lowRiskCount">0</b>
+    </div>
+  </div>
+
+  <p id="riskSummary" style="margin-top:10px;color:#9fb3c8;"></p>
+
+  <div class="risk-bar">
+    <div id="highBar"></div>
+    <div id="mediumBar"></div>
+    <div id="lowBar"></div>
+  </div>
+
+  <div class="ai-actions">
+    <p>🚀 Priority Action</p>
+    <ul>
+      <li>Deploy health camps</li>
+      <li>Increase nutrition supply</li>
+    </ul>
+  </div>
+
+  <div class="ai-footer">
+    Last updated: Just now
+  </div>
+
+</div>
+
+  
     </aside>
 
   </main>

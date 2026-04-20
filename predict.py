@@ -1,14 +1,17 @@
 from flask import Flask, request, jsonify
 import pandas as pd
+from flask_cors import CORS
 from sklearn.linear_model import LinearRegression
 
 app = Flask(__name__)
+
+CORS(app)
 
 @app.route('/', methods=["GET"])
 def home():
     return "Flask API is running ✅"
 
-@app.route('/predict', methods=["POST"])
+@app.route('/predict', methods=["GET","POST"])
 def predict():
     
     try:
@@ -50,10 +53,31 @@ def predict():
         else:
             risk = "Low"
 
+#count risk levels for each row
+
+
+        avg = df["total"].mean()
+        high = len(df[df["total"] > avg * 1.2])
+        medium = len(df[(df["total"] > avg * 0.6) & (df["total"] <= avg * 1.2)])
+        low = len(df[df["total"] <= avg * 0.6])
+        for _, row in df.iterrows():
+            total = row["sam"]+ row["mam"]
+
+            if total > 70:
+                high += 1
+            elif total > 30:
+                medium += 1
+            else:
+                low += 1
+
         return jsonify({
             "prediction": int(prediction),
             "riskLevel": risk,
-            "growthRate": round(growth, 2)
+            "growthRate": round(growth, 2),
+
+            "highRisk": int(high),
+            "mediumRisk": int(medium),
+            "lowRisk": int(low)
         })
 
     except Exception as e:
