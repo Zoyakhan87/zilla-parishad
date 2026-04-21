@@ -61,7 +61,19 @@ body{margin:0;background:linear-gradient(180deg,#041024,#07142a);min-height:100v
 button{cursor:pointer;padding:8px 10px;border-radius:8px;border:none;background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#021428;font-weight:700}
 .site-footer{text-align:center;color:#94a3b8;padding:12px;margin-top:18px}
 .content{max-width:900px;margin:20px auto;padding:12px}
-.content h2{margin-top:0}
+.content section{
+  margin-bottom:20px;
+}
+
+.content h3{
+  margin-top:10px;
+}
+
+.content ul{
+  margin-left:20px;
+  color:#9fb3c8;
+}
+.content h2{margin-top:0;border-left: 4px solid #06b6d4;padding-left: 10px;}
 form label{display:block;margin-top:10px;color:var(--muted)}
 form input, form textarea{width:100%;padding:8px;border-radius:8px;border:none;background:rgba(255,255,255,0.02);color:var(--text)}
 @media(max-width:1000px){.container{grid-template-columns:1fr}.hero{flex-direction:column}.nav{flex-wrap:wrap}}
