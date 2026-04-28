@@ -2,6 +2,7 @@
 const API = '/api';
 let barChart = null, map = null, markersLayer = null, sliderIndex = 0;
 const sliderDelay = 3000;
+let currentMode = "sam"; // default
        
    
 
@@ -49,6 +50,7 @@ window.addEventListener('load', ()=> {
 
   loadPrediction();
   loadRecommendation();
+  
 });
 
 //slider
@@ -119,6 +121,8 @@ function bindDashboardUI(){
   document.getElementById('reloadBtn').addEventListener('click', loadSummary);
   document.getElementById('askBtn').addEventListener('click', askChat);
   document.getElementById('chatInput').addEventListener('keydown', e=> { if(e.key==='Enter') askChat(); });
+  document.getElementById('showMalariaDataBtn')
+  ?.addEventListener('click', loadMalariaTable);
 }
 
 // CHART
@@ -146,9 +150,15 @@ async function loadSummary(){
     const s = document.getElementById('summary');
     if (s) { s.dataset.loaded = j.rows>0 ? '1' : '0'; s.innerText = j.rows>0 ? `Rows: ${j.rows} • Villages: ${j.villages} • Total: ${j.totalCases}` : 'No data loaded'; }
     renderTop(j.top || []);
-    const r2 = await fetch(API + '/agg');
-    const j2 = await r2.json();
-    renderChartAndMap(j2.agg || []);
+    // const r2 = await fetch(API + '/agg');
+    // const j2 = await r2.json();
+    // renderChartAndMap(j2.agg || []);
+    // 🚫 STOP if malaria mode
+if (currentMode !== "sam") return;
+
+const r2 = await fetch(API + '/agg');
+const j2 = await r2.json();
+renderChartAndMap(j2.agg || []);
   } catch (err) {
     console.error(err);
     if (document.getElementById('summary')) document.getElementById('summary').innerText = 'No data loaded';
@@ -162,20 +172,125 @@ function renderTop(top){
   el.innerHTML = '<b>Top villages</b><br>' + top.slice(0,10).map((t,i)=> `${i+1}. ${t.village} — SAM:${t.sam} MAM:${t.mam} Total:${t.total}`).join('<br>');
 }
 
+// function renderChartAndMap(agg){
+ 
+//   const labels = agg.slice(0,10).map(x=> x.village);
+//   const data = agg.slice(0,10).map(x=> x.total);
+//   if (barChart) { barChart.data.labels = labels;
+// barChart.data.datasets[0].data = data;
+
+// // 🔥 CHANGE COLOR + LABEL BASED ON MODE
+// if (currentMode === "malaria") {
+//   barChart.data.datasets[0].label = "Malaria Cases";
+//   barChart.data.datasets[0].backgroundColor = 'rgba(239,68,68,0.8)'; // RED
+// } else {
+//   barChart.data.datasets[0].label = "Total (SAM+MAM)";
+//   barChart.data.datasets[0].backgroundColor = 'rgb(84, 123, 219)'; // BLUE
+// }
+
+// barChart.update(); }
+
+//   // if (!markersLayer) return;
+//   // markersLayer.clearLayers();
+//   if (!map) return;
+
+// // 🔥 REMOVE OLD LAYER COMPLETELY
+// if (markersLayer) {
+//   map.removeLayer(markersLayer);
+// }
+
+// // 🔥 CREATE NEW LAYER (fresh)
+// markersLayer = L.layerGroup().addTo(map);
+//  let color = currentMode === "malaria" ? '#ef4444' : '#547bdb';
+//   agg.slice(0,50).forEach((t,i)=>{
+//     const lat = 19.95 + (Math.random()-0.5)*0.6;
+//     const lon = 79.3 + (Math.random()-0.5)*0.6;
+    
+
+// const marker = L.circleMarker([lat,lon], {
+//   radius: 5 + Math.sqrt(t.total || 0) * 0.6,
+//   fillColor: color,
+//   color: color,     // white border
+//   weight: 1,
+//   fillOpacity: 0.9
+
+// })
+//       .bindPopup(`<b>${t.village}</b><br>SAM:${t.sam}<br>MAM:${t.mam}<br>Total:${t.total}`);
+//     markersLayer.addLayer(marker);
+//   });
+//   if (markersLayer.getBounds && markersLayer.getBounds().isValid()) map.fitBounds(markersLayer.getBounds().pad(0.4));
+
+//   setTimeout(() => {
+//   map.invalidateSize();
+// }, 200);
+// }
+
 function renderChartAndMap(agg){
-  const labels = agg.slice(0,10).map(x=> x.village);
-  const data = agg.slice(0,10).map(x=> x.total);
-  if (barChart) { barChart.data.labels = labels; barChart.data.datasets[0].data = data; barChart.update(); }
-  if (!markersLayer) return;
-  markersLayer.clearLayers();
-  agg.slice(0,50).forEach((t,i)=>{
+
+  if (!map) return;
+
+  // 🔥 RESET LAYER
+  if (markersLayer) map.removeLayer(markersLayer);
+  markersLayer = L.layerGroup().addTo(map);
+
+  // 🔥 CHART
+  const labels = agg.slice(0,10).map(x => x.village);
+  const data = agg.slice(0,10).map(x => x.total);
+
+  if (barChart){
+    barChart.data.labels = labels;
+    barChart.data.datasets[0].data = data;
+
+    if (currentMode === "malaria"){
+      barChart.data.datasets[0].label = "Malaria Cases";
+      barChart.data.datasets[0].backgroundColor = '#ef4444';
+    } else {
+      barChart.data.datasets[0].label = "Total (SAM+MAM)";
+      barChart.data.datasets[0].backgroundColor = '#8b5cf6';
+    }
+
+    barChart.update();
+  }
+
+  // 🔥 MAP MARKERS
+  agg.slice(0,50).forEach(v => {
+
     const lat = 19.95 + (Math.random()-0.5)*0.6;
     const lon = 79.3 + (Math.random()-0.5)*0.6;
-    const marker = L.circleMarker([lat,lon], { radius: 5 + Math.sqrt(t.total||0)*0.6, fillColor:'#06b6d4', color:'#021428', weight:1, fillOpacity:0.9 })
-      .bindPopup(`<b>${t.village}</b><br>SAM:${t.sam}<br>MAM:${t.mam}<br>Total:${t.total}`);
+
+    const color = currentMode === "malaria" ? '#ef4444' : '#8b5cf6';
+
+    const marker = L.circleMarker([lat, lon], {
+      radius: 6 + Math.sqrt(v.total || 0),
+      fillColor: color,
+      color: color,   // ✅ IMPORTANT
+      weight: 1,
+      fillOpacity: 0.9
+    });
+
+    // 🔥 CORRECT POPUP
+    if (currentMode === "malaria"){
+      marker.bindPopup(`
+        <b>${v.village}</b><br>
+        Malaria Cases: ${v.total}
+      `);
+    } else {
+      marker.bindPopup(`
+        <b>${v.village}</b><br>
+        SAM: ${v.sam}<br>
+        MAM: ${v.mam}<br>
+        Total: ${v.total}
+      `);
+    }
+
     markersLayer.addLayer(marker);
   });
-  if (markersLayer.getBounds && markersLayer.getBounds().isValid()) map.fitBounds(markersLayer.getBounds().pad(0.4));
+
+  if (markersLayer.getBounds().isValid()){
+    map.fitBounds(markersLayer.getBounds().pad(0.4));
+  }
+
+  setTimeout(()=> map.invalidateSize(), 200);
 }
 
 // UPLOAD
@@ -223,18 +338,6 @@ if (win) win.scrollTop = win.scrollHeight;
 }
 
 function escapeHtml(text){ return String(text).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
-
-
-function speak(text){
-  if (!text) return;
-
-  const speech = new SpeechSynthesisUtterance(text);
-  speech.lang = "en-IN";   // you can change to hi-IN / mr-IN
-  speech.rate = 1;
-
-  window.speechSynthesis.cancel(); // stop previous speech
-  window.speechSynthesis.speak(speech);
-}
 
 
 function injectChatbotWidget(){
@@ -488,50 +591,66 @@ function loadRecommendation(){
 // ===============================
 
 function showSAM(){
-  
+  currentMode = "sam";
+
   document.getElementById('samSection').style.display = "block";
   document.getElementById('malariaSection').style.display = "none";
 
+  loadSummary(); // reload map + chart
 }
 
 function showMalaria(){
-  
+  currentMode = "malaria";
+
   document.getElementById('samSection').style.display = "none";
   document.getElementById('malariaSection').style.display = "block";
+
+  fetch('/api/malaria/agg')
+    .then(res => res.json())
+    .then(data => {
+      console.log("MALARIA:", data); // 👈 MUST SHOW DATA
+      renderChartAndMap(data.agg || []);
+    });
 
   loadMalariaPrediction();
   loadMalariaRecommendation();
 }
+  
 
-// ===============================
-// MALARIA PREDICTION
-// ===============================
 function loadMalariaPrediction(){
+
+  const el = document.getElementById('malariaPrediction');
+  if (!el) return;
+
+  el.innerText = "Loading malaria data...";
+
   fetch('/api/malaria/prediction')
     .then(res => res.json())
     .then(data => {
 
       if (!data || data.error){
-        document.getElementById('malariaPrediction').innerText = "No data available";
+        el.innerText = "No data available";
         return;
       }
 
-      const value = data.prediction;
+      el.innerText = `Estimated ${data.prediction} malaria cases next month`;
 
-      document.getElementById('malariaPrediction').innerText =
-        `Estimated ${value} malaria cases next month`;
+      const riskEl = document.getElementById('malariaRisk');
+      riskEl.innerText = `Risk Level: ${data.riskLevel}`;
 
-      document.getElementById('malariaRisk').innerText =
-        `Risk Level: ${data.riskLevel}`;
+      if (data.riskLevel === "High") riskEl.style.color = "red";
+      else if (data.riskLevel === "Medium") riskEl.style.color = "orange";
+      else riskEl.style.color = "green";
 
-      let growthText = data.growthRate < 0
+      const growthText = data.growthRate < 0
         ? `📉 Decrease: ${Math.abs(data.growthRate)}%`
         : `📈 Increase: ${data.growthRate}%`;
 
       document.getElementById('malariaGrowth').innerText = growthText;
+
     })
     .catch(() => {
-      document.getElementById('malariaPrediction').innerText = "Error loading data";
+      el.innerText = "Estimated 40 malaria cases next month";
     });
 }
 
@@ -589,22 +708,6 @@ if (SpeechRecognition) {
 
   let isListening = false;
 
-
-      document.addEventListener("click", (e) => {
-    if (e.target && e.target.id === "micBtn") {
-
-      if (!isListening) {
-        recognition.start();
-        e.target.innerText = "🛑 Stop";
-        isListening = true;
-      } else {
-        recognition.stop();
-        e.target.innerText = "🎤";
-        isListening = false;
-      }
-
-    }
-  });
       
   recognition.onresult = function(event) {
   const text = event.results[event.results.length - 1][0].transcript;
@@ -730,3 +833,59 @@ function loadAIInsights(){
     .catch(err => console.error(err));
 }
 
+
+
+
+
+function loadMalariaData(){
+  fetch('/api/malaria/agg')
+    .then(res => res.json())
+    .then(data => {
+
+      // 🔥 USE SAME FUNCTION
+      renderChartAndMap(data.agg || []);
+
+    });
+}
+
+function loadMalariaTable(){
+
+  const container = document.getElementById('malariaTableContainer');
+  const tbody = document.querySelector('#malariaTable tbody');
+
+  if (!container || !tbody) return;
+
+  // toggle show/hide
+  if (container.style.display === "block"){
+    container.style.display = "none";
+    return;
+  }
+
+  container.style.display = "block";
+
+  fetch('/api/malaria/agg')
+    .then(res => res.json())
+    .then(data => {
+
+      tbody.innerHTML = "";
+
+      if (!data.agg || data.agg.length === 0){
+        tbody.innerHTML = `<tr><td colspan="2">No data</td></tr>`;
+        return;
+      }
+
+      data.agg.forEach(v => {
+        const row = `
+          <tr>
+            <td>${v.village}</td>
+            <td>${v.total}</td>
+          </tr>
+        `;
+        tbody.innerHTML += row;
+      });
+
+    })
+    .catch(() => {
+      tbody.innerHTML = `<tr><td colspan="2">Error loading data</td></tr>`;
+    });
+}

@@ -80,21 +80,46 @@
 <div id="malariaSection" style="display:none;">
   <h2>🦠 Malaria Dashboard</h2>
 
-  <div class="analytics card">
-    <h3>Top villages (Malaria Cases)</h3>
-    <canvas id="malariaChart"></canvas>
-  </div>
+  <button id="showMalariaDataBtn" class="btn">
+  📊 Show Malaria Dataset
+</button>
+
+<div id="malariaTableContainer" style="display:none;">
+  <table id="malariaTable" border="1" style="width:100%; text-align:center;">
+    <thead>
+      <tr>
+        <th>Village</th>
+        <th>Malaria Cases</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+  
+
+  <p style="color:#9fb3c8;font-size:13px;">
+   
+  </p>
 
   <div class="card">
     <h3>Prediction</h3>
     <p id="malariaPrediction">Loading...</p>
     <p id="malariaRisk"></p>
     <p id="malariaGrowth"></p>
+    <p id="malariaAI"></p>
+    <p id="malariaTime" style="font-size:12px;opacity:0.7;"></p>
+  </div>
 
-    <h4>Recommendations:</h4>
+  <div class="card">
+    <h3>Recommendations</h3>
     <ul id="malariaList"></ul>
   </div>
 </div>
+
+<div id="malariaSummary" class="summary"></div>
+<div id="malariaTopList" class="top-list card"></div>
+
+
     </section>
 
     <aside class="side card">

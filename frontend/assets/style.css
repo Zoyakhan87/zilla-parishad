@@ -331,3 +331,19 @@ form input, form textarea{width:100%;padding:8px;border-radius:8px;border:none;b
   font-size:12px;
   color:#9fb3c8;
 }
+
+#malariaTable {
+  border-collapse: collapse;
+  background: rgba(255,255,255,0.05);
+  color: #e6eef6;
+}
+
+#malariaTable th {
+  background: #06b6d4;
+  color: #021428;
+  padding: 8px;
+}
+
+#malariaTable td {
+  padding: 6px;
+}

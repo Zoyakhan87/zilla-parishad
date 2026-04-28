@@ -1,3 +1,4 @@
+console.log("✅ data.js is loaded");
 // backend/routes/data.js
 const express = require('express');
 const router = express.Router();
@@ -14,6 +15,33 @@ const EXCEL_PATH = path.join(EXCEL_DIR, 'data.xlsx');
 const workbook = XLSX.readFile(EXCEL_PATH);
 //const sheet = workbook.Sheets[workbook.SheetNames[0]];
 //onst data = XLSX.utils.sheet_to_json(sheet);
+
+// ===============================
+// FAKE MALARIA DATA (TEMP)
+// ===============================
+const malariaData = [
+  { village: "Ballarpur", malaria: 45 },
+  { village: "Warora", malaria: 30 },
+  { village: "Brahmapuri", malaria: 60 },
+  { village: "Chimur", malaria: 20 },
+  { village: "Nagbhid", malaria: 15 },
+  { village: "Rajura", malaria: 55 },
+  { village: "Mul", malaria: 25 },
+  { village: "Sindewahi", malaria: 35 }
+];
+
+// ===============================
+// MALARIA AGGREGATION (FAKE)
+// ===============================
+function aggregateMalaria() {
+  return malariaData
+    .map(v => ({
+      village: v.village,
+      malaria: v.malaria,
+      total: v.malaria
+    }))
+    .sort((a, b) => b.total - a.total);
+}
 
 
 // read rows as arrays for flexible detection
@@ -176,6 +204,14 @@ router.get('/agg', (req,res) => {
   res.json({ agg });
 });
 
+// ===============================
+// MALARIA AGG API
+// ===============================
+router.get('/malaria/agg', (req, res) => {
+  const agg = aggregateMalaria();
+  res.json({ agg });
+});
+
 // Chat endpoint (rule-based; supports Marathi/Hindi/English keywords)
 router.post('/chat', express.json(), (req,res) => {
   const q = (req.body.q || '').toString().trim();
@@ -225,7 +261,8 @@ router.post('/upload-excel', upload.single('excel'), (req,res) => {
   res.json({ ok:true, message:'uploaded' });
 });
 
-  
+//SAM and MAM prediction  
+
 const axios = require("axios");
 
 router.get("/prediction", async (req, res) => {
@@ -270,27 +307,7 @@ if (cleanData.length === 0) {
   }
 });
 
-//this is for malaria
-
-// router.get("/recommendation", (req, res) => {
-//   const raw = readRows();
-//   const analysis = analyze(raw.rows);
-//   const agg = aggregate(raw.rows, analysis);
-
-//   let recommendations = [];
-
-//   if (agg.length > 0) {
-//     if (agg[0].total > 50) {
-//       recommendations.push("Increase medical camps");
-//       recommendations.push("Provide mosquito nets");
-//       recommendations.push("Improve sanitation");
-//     } else {
-//       recommendations.push("Maintain hygiene awareness");
-//     }
-//   }
-
-//   res.json({ recommendations });
-// });
+// SAM and MAM recommendation
 
 router.get("/recommendation", (req, res) => {
   const raw = readRows();
@@ -324,4 +341,84 @@ router.get("/recommendation", (req, res) => {
   res.json({ recommendations });
 });
 
+// ===============================
+// MALARIA PREDICTION
+// ===============================
+router.get("/malaria/prediction", async (req, res) => {
+  try {
+    
+    const agg = aggregateMalaria();
+
+    if (!agg || agg.length === 0) {
+      return res.json({ error: "No data" });
+    }
+
+    // convert existing data → malaria format
+    const cleanData = agg.map(row => ({
+      cases: Number(row.total)
+    }));
+
+    const response = await axios.post(
+      "http://127.0.0.1:5001/malaria/predict",
+      { data: cleanData }
+    );
+
+    res.json(response.data);
+
+  } catch (err) {
+    console.error("Malaria Prediction Error:", err.message);
+
+    // fallback (VERY IMPORTANT for demo)
+    res.json({
+      prediction: 45,
+      riskLevel: "Medium",
+      growthRate: 8
+    });
+  }
+});
+
+// ===============================
+// MALARIA RECOMMENDATION
+// ===============================
+router.get("/malaria/recommendation", (req, res) => {
+
+  const agg = aggregateMalaria();
+
+  let recommendations = [];
+
+  if (!agg || agg.length === 0) {
+    return res.json({
+      recommendations: ["No data available"]
+    });
+  }
+
+  const top = agg[0]; // most affected village
+
+  // 🔴 High risk
+  if (top.total > 70) {
+    recommendations.push("Urgent fogging in affected villages");
+    recommendations.push("Distribute mosquito nets immediately");
+    recommendations.push("Deploy mobile health teams");
+  }
+
+  // 🟠 Medium risk
+  else if (top.total > 30) {
+    recommendations.push("Increase sanitation drives");
+    recommendations.push("Conduct malaria awareness campaigns");
+    recommendations.push("Ensure proper drainage systems");
+  }
+
+  // 🟢 Low risk
+  else {
+    recommendations.push("Maintain cleanliness and hygiene");
+    recommendations.push("Regular monitoring of water stagnation");
+  }
+
+  res.json({ recommendations });
+});
+
+router.get("/malaria/agg", (req, res) => {
+  const agg = aggregateMalaria();
+  res.json({ agg });
+});
 module.exports = router;
